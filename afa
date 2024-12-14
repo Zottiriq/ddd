@@ -34,7 +34,7 @@ void *fonksiyon(thread_data_t *data) {
     while (fgets(buffer, sizeof(buffer), dosya)) {
         printf("%s", buffer);
     }
-    fclose(file);
+    fclose(dosya);
 
     // İşlem tamamlandı
     data->tamammi = 1;                       
@@ -77,7 +77,7 @@ int main() {
     pthread_mutex_lock(&data.mutex);
     while (!data.tamammi) {
         kontrol = pthread_cond_timedwait(&data.cond, &data.mutex, &ts);
-        if (kontrol == ETIMEDOUT) {  // Eğer süre aşımı olursa
+        if (kontrol != 0) {  // Eğer süre aşımı olursa
             printf("islem zaman asimina uğradı\n");
             break;
         }
