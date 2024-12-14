@@ -5,10 +5,10 @@
 #include <time.h>
 
 typedef struct {
-    pthread_mutex_t mutex;   // Mutex kilidi
+    pthread_mutex_t mutex; //mutex kilidi
+    int tamammi;
     pthread_cond_t cond;     // Koşul değişkeni
-    int tamammi;         // İşlemin tamamlanma durumu
-    char *filename;          // İşlenen dosya ismi
+    char *dosyaadi;          // dosya ismi
 } thread_data_t;
 
 // İş parçacığı fonksiyonu
@@ -16,12 +16,12 @@ void *fonksiyon(thread_data_t *data) {
     // Mutex kilidi al
     pthread_mutex_lock(&data->mutex);            
 
-    printf("Thread: Dosya işlemi başlatılıyor: %s\n", data->filename);
+    printf("Thread: Dosya işlemi başlatılıyor: %s\n", data->dosyaadi);
 
     // Dosya açma işlemi
-    FILE *dosya = fopen(data->filename, "r");
+    FILE *dosya = fopen(data->dosyaadi, "r");
     if (dosya == NULL) {
-        perror("Thread: Dosya açılamadı");
+        perror("thread: Dosya açılamadı");
         data->tamammi = -1;  // Hata durumu
         pthread_cond_signal(&data->cond);
         pthread_mutex_unlock(&data->mutex);
@@ -29,7 +29,7 @@ void *fonksiyon(thread_data_t *data) {
     }
 
     // Dosya içeriğini okuma ve ekrana yazma
-    printf("thread: dosya içeriği:\nKeremin kodu");
+    printf("thread: dosya içeriği:\nKeremin kodu\n");
     char buffer[256];
     while (fgets(buffer, sizeof(buffer), dosya)) {
         printf("%s", buffer);
@@ -54,10 +54,10 @@ int main() {
     pthread_mutex_init(&data.mutex, NULL);
     pthread_cond_init(&data.cond, NULL);
     data.tamammi = 0;
-    data.filename = "ornek_dosya.txt";
+    data.dosyaadi = "ornek_dosya.txt";
 
     // Örnek bir dosya oluşturma
-    FILE *dosya = fopen(data.filename, "w");
+    FILE *dosya = fopen(data.dosyaadi, "w");
     if (dosya == NULL) {
         perror("Main: Dosya oluşturulamadı");
         return 1;
