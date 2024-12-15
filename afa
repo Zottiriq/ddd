@@ -5,80 +5,80 @@
 #include <time.h>
 
 typedef struct {
-    pthread_mutex_t mutex; //mutex kilidi
-    int tamammi;
-    pthread_cond_t cond;     // Koşul değişkeni
+    pthread_mutex_t mutex; //  mutex kilidi
+    int tamammi;            // kontrol degiskeni
+    pthread_cond_t cond;     // kosul degiskeni
     char *dosyaadi;          // dosya ismi
 } thread_data_t;
 
-// İş parçacığı fonksiyonu
+// thread fonksiyonu
 void *fonksiyon(thread_data_t *data) {
-    // Mutex kilidi al
+    // kilitleyen fonksiyon
     pthread_mutex_lock(&data->mutex);            
 
-    printf("Thread: Dosya işlemi başlatılıyor: %s\n", data->dosyaadi);
+    printf("%s'nin islemi basliyor\n", data->dosyaadi);
 
-    // Dosya açma işlemi
+    // dosya olusturan fonksiyon
     FILE *dosya = fopen(data->dosyaadi, "r");
     if (dosya == NULL) {
-        perror("thread: Dosya açılamadı");
-        data->tamammi = -1;  // Hata durumu
+        perror("thread: dosya acilamadi");
+        data->tamammi = -1;
         pthread_cond_signal(&data->cond);
         pthread_mutex_unlock(&data->mutex);
         return NULL;
     }
 
-    // Dosya içeriğini okuma ve ekrana yazma
-    printf("thread: dosya içeriği:\nKeremin kodu\n");
+    // dosyayi okuyan ve ekrana yazdiran fonksiyon
+    printf("thread: dosya icerigi:\nKeremin kodu\n");
     char buffer[256];
     while (fgets(buffer, sizeof(buffer), dosya)) {
         printf("%s", buffer);
     }
     fclose(dosya);
 
-    // İşlem tamamlandı
+    // islemin tamamlandigini belirten fonksiyon
     data->tamammi = 1;                       
-    pthread_cond_signal(&data->cond);  // Ana iş parçacığını uyar
+    pthread_cond_signal(&data->cond);
     pthread_mutex_unlock(&data->mutex);          
 
     return NULL;                                 
 }
 
 int main() {
-    pthread_t thread;
     thread_data_t data;
     struct timespec ts;
+    pthread_t thread;
     int kontrol;
 
-    // Verileri başlat
+    // veri baslatan fonksiyon
     pthread_mutex_init(&data.mutex, NULL);
     pthread_cond_init(&data.cond, NULL);
     data.tamammi = 0;
     data.dosyaadi = "ornek_dosya.txt";
 
-    // Örnek bir dosya oluşturma
+    // dosya olusturma
     FILE *dosya = fopen(data.dosyaadi, "w");
     if (dosya == NULL) {
-        perror("Main: Dosya oluşturulamadı");
+        perror("dosya olusturulamadi");
         return 1;
     }
-    fprintf(dosya, "Bu bir örnek dosya içeriğidir.\n");
-    fprintf(dosya, "Dosya işlemleri başarılı bir şekilde çalışıyor.\n");
+    fprintf(dosya, "örnek dosya icerigi\n");
+    fprintf(dosya, "dosyabasarili sekilde calisiyor\n");
     fclose(dosya);
 
-    // İş parçacığını başlat
+    // threadi baslatan fonksiyon
     pthread_create(&thread, NULL, (void *(*)(void *))fonksiyon, &data);
 
-    // Zaman hesaplama
-    clock_gettime(CLOCK_REALTIME, &ts);  // Şu anki zamanı al
+    // zamani hesaplayan fonksiyon
+    clock_gettime(CLOCK_REALTIME, &ts);  // su anki zamani al
     ts.tv_sec += 3;            // Timeout süresini ekle
 
-    // İş parçacığının tamamlanmasını bekle
+    // threadin tamamlanmasini bekleyen fonksiyon
     pthread_mutex_lock(&data.mutex);
     while (!data.tamammi) {
         kontrol = pthread_cond_timedwait(&data.cond, &data.mutex, &ts);
-        if (kontrol != 0) {  // Eğer süre aşımı olursa
-            printf("islem zaman asimina uğradı\n");
+        if (kontrol != 0) {
+            printf("islem zaman asimina ugradi\n");
             break;
         }
     }
@@ -90,7 +90,7 @@ int main() {
         printf("islem basarisiz\n");
     }
 
-    // Kaynakları temizle
+    // kaynaklari temizleyen fonksiyonlar
  
     pthread_mutex_destroy(&data.mutex);
     pthread_join(thread, NULL);
