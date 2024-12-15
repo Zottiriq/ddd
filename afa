@@ -5,7 +5,7 @@
 #include <time.h>
 
 typedef struct {
-    pthread_mutex_t mutex; //  mutex kilidi
+    pthread_mutex_t kilit; //  kilit
     int tamammi;            // kontrol degiskeni
     pthread_cond_t cond;     // kosul degiskeni
     char *dosyaadi;          // dosya ismi
@@ -14,22 +14,22 @@ typedef struct {
 // thread fonksiyonu
 void *fonksiyon(thread_data_t *data) {
     // kilitleyen fonksiyon
-    pthread_mutex_lock(&data->mutex);            
+    pthread_mutex_lock(&data->kilit);            
 
     printf("%s'nin islemi basliyor\n", data->dosyaadi);
 
     // dosya olusturan fonksiyon
     FILE *dosya = fopen(data->dosyaadi, "r");
     if (dosya == NULL) {
-        perror("thread: dosya acilamadi");
+        perror("dosya acilamadi");
         data->tamammi = -1;
         pthread_cond_signal(&data->cond);
-        pthread_mutex_unlock(&data->mutex);
+        pthread_mutex_unlock(&data->kilit);
         return NULL;
     }
 
     // dosyayi okuyan ve ekrana yazdiran fonksiyon
-    printf("thread: dosya icerigi:\nKeremin kodu\n");
+    printf("dosya icerigi:\nKeremin kodu\n");
     char buffer[256];
     while (fgets(buffer, sizeof(buffer), dosya)) {
         printf("%s", buffer);
@@ -39,7 +39,7 @@ void *fonksiyon(thread_data_t *data) {
     // islemin tamamlandigini belirten fonksiyon
     data->tamammi = 1;                       
     pthread_cond_signal(&data->cond);
-    pthread_mutex_unlock(&data->mutex);          
+    pthread_mutex_unlock(&data->kilit);          
 
     return NULL;                                 
 }
@@ -51,38 +51,38 @@ int main() {
     int kontrol;
 
     // veri baslatan fonksiyon
-    pthread_mutex_init(&data.mutex, NULL);
+    pthread_mutex_init(&data.kilit, NULL);
     pthread_cond_init(&data.cond, NULL);
     data.tamammi = 0;
-    data.dosyaadi = "ornek_dosya.txt";
+    data.dosyaadi = "kerem.txt";
 
     // dosya olusturma
     FILE *dosya = fopen(data.dosyaadi, "w");
     if (dosya == NULL) {
         perror("dosya olusturulamadi");
-        return 1;
+        return 0;
     }
-    fprintf(dosya, "örnek dosya icerigi\n");
-    fprintf(dosya, "dosyabasarili sekilde calisiyor\n");
+    fprintf(dosya, "dosya icerigi:\n");
+    fprintf(dosya, "dosya calisiyor\n");
     fclose(dosya);
 
     // threadi baslatan fonksiyon
     pthread_create(&thread, NULL, (void *(*)(void *))fonksiyon, &data);
 
     // zamani hesaplayan fonksiyon
-    clock_gettime(CLOCK_REALTIME, &ts);  // su anki zamani al
-    ts.tv_sec += 3;            // Timeout süresini ekle
+    clock_gettime(CLOCK_REALTIME, &ts);  // simdiki zamanli alir
+    ts.tv_sec += 3;            // bekleme süresi ekleme
 
     // threadin tamamlanmasini bekleyen fonksiyon
-    pthread_mutex_lock(&data.mutex);
+    pthread_mutex_lock(&data.kilit);
     while (!data.tamammi) {
-        kontrol = pthread_cond_timedwait(&data.cond, &data.mutex, &ts);
+        kontrol = pthread_cond_timedwait(&data.cond, &data.kilit, &ts);
         if (kontrol != 0) {
             printf("islem zaman asimina ugradi\n");
             break;
         }
     }
-    pthread_mutex_unlock(&data.mutex);
+    pthread_mutex_unlock(&data.kilit);
 
     if (data.tamammi) {
         printf("islem basarili\n");
@@ -92,7 +92,7 @@ int main() {
 
     // kaynaklari temizleyen fonksiyonlar
  
-    pthread_mutex_destroy(&data.mutex);
+    pthread_mutex_destroy(&data.kilit);
     pthread_join(thread, NULL);
     pthread_cond_destroy(&data.cond);
 
