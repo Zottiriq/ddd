@@ -1,3 +1,5 @@
+//AD:MEHMET KEREM İNCİ
+//NUMARA: 230206057
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
