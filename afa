@@ -1,21 +1,24 @@
-//AD:MEHMET KEREM İNCİ
-//NUMARA: 230206057
 #include <unistd.h>
 #include <stdio.h>
 #include <time.h>
 #include <pthread.h>
 #include <stdlib.h>
+
 typedef struct {
     pthread_mutex_t kilit; //  kilit
     int tamammi;            // kontrol degiskeni
     pthread_cond_t cond;     // kosul degiskeni
     char *dosyaadi;          // dosya ismi
 } thread_data_t;
+
 // thread fonksiyonu
 void *fonksiyon(thread_data_t *data) {
+
     // kilitleyen fonksiyon
-    pthread_mutex_lock(&data->kilit);            
+    pthread_mutex_lock(&data->kilit); 
+
     printf("%s'nin islemi basliyor\n", data->dosyaadi);
+
     // dosya olusturan fonksiyon
     FILE *dosya = fopen(data->dosyaadi, "r");
     if (dosya == NULL) {
@@ -25,6 +28,7 @@ void *fonksiyon(thread_data_t *data) {
         pthread_mutex_unlock(&data->kilit);
         return NULL;
     }
+
     // dosyayi okuyan ve ekrana yazdiran fonksiyon
     printf("Keremin kodu\n");
     char buffer[256];
@@ -32,22 +36,26 @@ void *fonksiyon(thread_data_t *data) {
         printf("%s", buffer);
     }
     fclose(dosya);
+
     // islemin tamamlandigini belirten fonksiyon
     data->tamammi = 1;                       
     pthread_cond_signal(&data->cond);
     pthread_mutex_unlock(&data->kilit);          
     return NULL;                                 
 }
+
 int main() {
     thread_data_t data;
     struct timespec ts;
     pthread_t thread;
     int kontrol;
+
     // veri baslatan fonksiyon
     pthread_mutex_init(&data.kilit, NULL);
     pthread_cond_init(&data.cond, NULL);
     data.tamammi = 0;
     data.dosyaadi = "kerem.txt";
+
     // dosya olusturma
     FILE *dosya = fopen(data.dosyaadi, "w");
     if (dosya == NULL) {
@@ -57,11 +65,14 @@ int main() {
     fprintf(dosya, "dosya icerigi:\n");
     fprintf(dosya, "dosya calisiyor\n");
     fclose(dosya);
+
     // threadi baslatan fonksiyon
     pthread_create(&thread, NULL, (void *(*)(void *))fonksiyon, &data);
+
     // zamani hesaplayan fonksiyon
     clock_gettime(CLOCK_REALTIME, &ts);  // simdiki zamanli alir
     ts.tv_sec += 3;            // bekleme süresi ekleme
+
     // threadin tamamlanmasini bekleyen fonksiyon
     pthread_mutex_lock(&data.kilit);
     while (!data.tamammi) {
@@ -77,6 +88,7 @@ int main() {
     } else {
         printf("islem basarisiz\n");
     }
+
     // kaynaklari temizleyen fonksiyonlar
     pthread_mutex_destroy(&data.kilit);
     pthread_join(thread, NULL);
