@@ -26,7 +26,7 @@ void *fonksiyon(thread_data_t *data) {
         return NULL;
     }
     // dosyayi okuyan ve ekrana yazdiran fonksiyon
-    printf("dosya icerigi:\nKeremin kodu\n");
+    printf("Keremin kodu\n");
     char buffer[256];
     while (fgets(buffer, sizeof(buffer), dosya)) {
         printf("%s", buffer);
